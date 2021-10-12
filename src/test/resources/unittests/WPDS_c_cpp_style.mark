@@ -1,0 +1,30 @@
+entity Foo {
+  op new {
+    this = Foo_new();
+  }
+
+  op init {
+    Foo_init(this);
+    Foo::init();
+  }
+
+  op work {
+    Foo_work(this, _);
+    Foo::work(_);
+  }
+
+  op finish {
+    Foo_finish(this);
+    Foo::finish();
+  }
+}
+
+rule FooOrder {
+  using Foo as foo
+  ensure order
+    foo.new()?, // only c style
+    foo.init(),
+    foo.work()+,
+    foo.finish()
+  warn
+}

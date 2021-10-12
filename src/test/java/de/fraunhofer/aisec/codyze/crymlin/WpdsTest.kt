@@ -510,6 +510,38 @@ internal class WpdsTest : AbstractMarkTest() {
         assertFalse(startLineNumbers[18]!!) // EVP_EncryptFinal
     }
 
+    @Test
+    @Throws(Exception::class)
+    fun testWPDSCStyle1() {
+        val findings = performTest("unittests/wpds_cstyle1.c", "unittests/WPDS_c_cpp_style.mark")
+
+        assertTrue { findings.all { !it.isProblem } }
+    }
+    @Test
+    @Throws(Exception::class)
+    fun testWPDSCppStyle1() {
+        val findings = performTest("unittests/wpds_cppstyle1.cpp", "unittests/WPDS_c_cpp_style.mark")
+
+        assertTrue { findings.all { !it.isProblem } }
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testWPDSCStyle2() {
+        // missing call to "finish()"
+        val findings = performTest("unittests/wpds_cstyle2.c", "unittests/WPDS_c_cpp_style.mark")
+
+        assertFalse { findings.all { !it.isProblem } }
+    }
+    @Test
+    @Throws(Exception::class)
+    fun testWPDSCppStyle2() {
+        // missing call to "finish()"
+        val findings = performTest("unittests/wpds_cppstyle2.cpp", "unittests/WPDS_c_cpp_style.mark")
+
+        assertFalse { findings.all { !it.isProblem } }
+    }
+
     init {
         // Using WPDS instead of NFA
         tsMode = TypestateMode.WPDS
