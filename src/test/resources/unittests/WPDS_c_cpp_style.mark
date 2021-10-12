@@ -1,3 +1,5 @@
+package unittests
+
 entity Foo {
   op new {
     this = Foo_new();
