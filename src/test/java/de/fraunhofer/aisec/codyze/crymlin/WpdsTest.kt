@@ -158,11 +158,83 @@ internal class WpdsTest : AbstractMarkTest() {
         assertTrue(startLineNumbers.containsKey(26)) // finish
         assertFalse(startLineNumbers[26]!!)
     }
+    @Test
+    @Throws(Exception::class)
+    fun testWpdsOK1_cstyle() {
+        val findings = performTest("unittests/wpds-ok1_cstyle.c", "unittests/order2.mark")
+
+        // Extract <line nr, isProblem> from findings
+        val startLineNumbers =
+            findings
+                .stream()
+                .collect(
+                    Collectors.toMap(
+                        { f: Finding? -> f!!.regions[0].startLine },
+                        { obj: Finding? -> obj!!.isProblem },
+                        { isProblemA: Boolean, isProblemB: Boolean ->
+                            println("Several findings : $isProblemA/$isProblemB")
+                            isProblemA && isProblemB
+                        }
+                    )
+                )
+
+        // Note that line numbers of the "range" are the actual line numbers -1. This is required
+        // for proper LSP->editor mapping
+        assertTrue(startLineNumbers.containsKey(10)) // create
+        assertFalse(startLineNumbers[10]!!)
+        assertTrue(startLineNumbers.containsKey(15)) // init
+        assertFalse(startLineNumbers[15]!!)
+        assertTrue(startLineNumbers.containsKey(21)) // start
+        assertFalse(startLineNumbers[21]!!)
+        assertTrue(startLineNumbers.containsKey(22)) // process
+        assertFalse(startLineNumbers[22]!!)
+        assertTrue(startLineNumbers.containsKey(24)) // process
+        assertFalse(startLineNumbers[24]!!)
+        assertTrue(startLineNumbers.containsKey(26)) // finish
+        assertFalse(startLineNumbers[26]!!)
+    }
 
     @Test
     @Throws(Exception::class)
     fun testWpdsOK2() {
         val findings = performTest("unittests/wpds-ok2.cpp", "unittests/order2.mark")
+
+        // Extract <line nr, isProblem> from findings
+        val startLineNumbers =
+            findings
+                .stream()
+                .collect(
+                    Collectors.toMap(
+                        { f: Finding? -> f!!.regions[0].startLine },
+                        { obj: Finding? -> obj!!.isProblem },
+                        { isProblemA: Boolean, isProblemB: Boolean ->
+                            println("Several findings : $isProblemA/$isProblemB")
+                            isProblemA && isProblemB
+                        }
+                    )
+                )
+
+        // Note that line numbers of the "range" are the actual line numbers -1. This is required
+        // for proper LSP->editor mapping
+        assertTrue(startLineNumbers.containsKey(10)) // create
+        assertFalse(startLineNumbers[10]!!)
+        assertTrue(startLineNumbers.containsKey(15)) // init
+        assertFalse(startLineNumbers[15]!!)
+        assertTrue(startLineNumbers.containsKey(17)) // start
+        assertFalse(startLineNumbers[17]!!)
+        assertTrue(startLineNumbers.containsKey(20)) // process
+        assertFalse(startLineNumbers[20]!!)
+        assertTrue(startLineNumbers.containsKey(21)) // process
+        assertFalse(startLineNumbers[21]!!)
+        assertTrue(startLineNumbers.containsKey(23)) // process
+        assertFalse(startLineNumbers[23]!!)
+        assertTrue(startLineNumbers.containsKey(25)) // finish
+        assertFalse(startLineNumbers[25]!!)
+    }
+    @Test
+    @Throws(Exception::class)
+    fun testWpdsOK2_ctsyle() {
+        val findings = performTest("unittests/wpds-ok2_cstyle.c", "unittests/order2.mark")
 
         // Extract <line nr, isProblem> from findings
         val startLineNumbers =
@@ -264,6 +336,36 @@ internal class WpdsTest : AbstractMarkTest() {
     @Throws(Exception::class)
     fun testWpdsNOK1() {
         val findings = performTest("unittests/wpds-nok1.cpp", "unittests/order2.mark")
+
+        // Extract <line nr, isProblem> from findings
+        val startLineNumbers =
+            findings
+                .stream()
+                .collect(
+                    Collectors.toMap(
+                        { f: Finding? -> f!!.regions[0].startLine },
+                        { obj: Finding? -> obj!!.isProblem },
+                        { isProblemA: Boolean, isProblemB: Boolean ->
+                            println("Several findings : $isProblemA/$isProblemB")
+                            isProblemA && isProblemB
+                        }
+                    )
+                )
+
+        // Note that line numbers of the "range" are the actual line numbers -1. This is required
+        // for proper LSP->editor mapping
+        assertTrue(startLineNumbers.containsKey(22)) // start
+        assertTrue(startLineNumbers[22]!!)
+        assertTrue(startLineNumbers.containsKey(24)) // start
+        assertTrue(startLineNumbers[24]!!)
+        //		assertTrue(startLineNumbers.containsKey(29)); // start
+        //		assertTrue(startLineNumbers.get(29));
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testWpdsNOK1_cstyle() {
+        val findings = performTest("unittests/wpds-nok1_cstyle.c", "unittests/order2.mark")
 
         // Extract <line nr, isProblem> from findings
         val startLineNumbers =

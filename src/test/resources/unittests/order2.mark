@@ -2,23 +2,32 @@ package unittests
 
 entity Order2 {
 
+  op new {
+    this = Botan2_new();
+  }
 	op createOp {
         Botan2::create();
+        Botan2_create(this);
 	}
 	op initOp {
         Botan2::init();
+        Botan2_init(this);
 	}
 	op startOp {
     	Botan2::start();
+      Botan2_start(this);
 	}
 	op processOp {
         Botan2::process();
+        Botan2_process(this);
     }
 	op finishOp {
         Botan2::finish();
+        Botan2_finish(this);
     }
     op resetOp {
         Botan2::reset();
+        Botan2_reset(this);
     }
 }
 
