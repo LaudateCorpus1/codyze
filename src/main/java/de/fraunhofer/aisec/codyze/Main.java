@@ -20,8 +20,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Help;
 import picocli.CommandLine.Model.OptionSpec;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,8 +28,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -140,26 +137,31 @@ public class Main {
 		public Integer call() throws Exception {
 			Instant start = Instant.now();
 
-			var config = ServerConfiguration.builder()
-					.launchLsp(codyzeConfig.getExecutionMode().lsp)
-					.launchConsole(codyzeConfig.getExecutionMode().tui)
-					.typestateAnalysis(codyzeConfig.getTypestateAnalysis().tsMode)
-					.disableGoodFindings(codyzeConfig.isNoGoodFindings())
-					.analyzeIncludes(cpgConfig.isAnalyzeIncludes())
-					.includePath(cpgConfig.getIncludePaths())
-					.markFiles(Arrays.stream(codyzeConfig.getMark()).map(File::getAbsolutePath).toArray(String[]::new));
+			//			var config = ServerConfiguration.builder()
+			//					.launchLsp(codyzeConfig.getExecutionMode().lsp)
+			//					.launchConsole(codyzeConfig.getExecutionMode().tui)
+			//					.typestateAnalysis(codyzeConfig.getTypestateAnalysis().tsMode)
+			//					.disableGoodFindings(codyzeConfig.isNoGoodFindings())
+			//					.analyzeIncludes(cpgConfig.getTranslationSettings().analyzeIncludes)
+			//					.includePath(cpgConfig.getTranslationSettings().includesPath)
+			//					.markFiles(Arrays.stream(codyzeConfig.getMark()).map(File::getAbsolutePath).toArray(String[]::new));
+			//
+			//			if (cpgConfig.getAdditionalLanguages().contains(Language.PYTHON)) {
+			//				config.registerLanguage(PythonLanguageFrontend.class, PythonLanguageFrontend.PY_EXTENSIONS);
+			//			}
+			//
+			//			if (cpgConfig.getAdditionalLanguages().contains(Language.GO)) {
+			//				config.registerLanguage(GoLanguageFrontend.class, GoLanguageFrontend.GOLANG_EXTENSIONS);
+			//			}
+			//			AnalysisServer server = AnalysisServer.builder()
+			//					.config(config
+			//							.build())
+			//					.build();
 
-			if (cpgConfig.getAdditionalLanguages().contains(Language.PYTHON)) {
-				config.registerLanguage(PythonLanguageFrontend.class, PythonLanguageFrontend.PY_EXTENSIONS);
-			}
-
-			if (cpgConfig.getAdditionalLanguages().contains(Language.GO)) {
-				config.registerLanguage(GoLanguageFrontend.class, GoLanguageFrontend.GOLANG_EXTENSIONS);
-			}
+			var config = codyzeConfig.buildServerConfiguration(cpgConfig.buildTranslationSettings(codyzeConfig.getSource().getAbsolutePath()));
 
 			AnalysisServer server = AnalysisServer.builder()
-					.config(config
-							.build())
+					.config(config)
 					.build();
 
 			server.start();
@@ -266,52 +268,5 @@ class HelpRenderer implements CommandLine.IHelpSectionRenderer {
 			addHierachy(group, sb, indent + "    ");
 		}
 
-	}
-}
-
-/**
- * Codyze runs in any of three modes:
- * <p>
- * CLI: Non-interactive command line client. Accepts arguments from command line and runs analysis.
- * <p>
- * LSP: Bind to stdout as a server for Language Server Protocol (LSP). This mode is for IDE support.
- * <p>
- * TUI: The text based user interface (TUI) is an interactive console that allows exploring the analyzed source code by manual queries.
- */
-class ExecutionMode {
-	@Option(names = "-c", required = true, description = "Start in command line mode.")
-	boolean cli;
-	@Option(names = "-l", required = true, description = "Start in language server protocol (LSP) mode.")
-	boolean lsp;
-	@Option(names = "-t", required = true, description = "Start interactive console (Text-based User Interface).")
-	boolean tui;
-}
-
-class AnalysisMode {
-	AnalysisMode() {
-	}
-
-	@Option(names = "--typestate", paramLabel = "<NFA|WPDS>", type = TypestateMode.class, description = "Typestate analysis mode\nNFA:  Non-deterministic finite automaton (faster, intraprocedural)\nWPDS: Weighted pushdown system (slower, interprocedural)\n\t(Default: ${DEFAULT-VALUE})")
-	protected static TypestateMode tsMode = TypestateMode.NFA;
-
-	public void setTsMode(TypestateMode tsMode) {
-		this.tsMode = tsMode;
-	}
-}
-
-class TranslationSettings {
-	@Option(names = {
-			"--analyze-includes" }, description = "Enables parsing of include files. By default, if --includes are given, the parser will resolve symbols/templates from these include, but not load their parse tree.")
-	protected boolean analyzeIncludes = false;
-
-	@Option(names = { "--includes" }, description = "Path(s) containing include files. Path must be separated by : (Mac/Linux) or ; (Windows)", split = ":|;")
-	protected File[] includesPath;
-
-	public void setAnalyzeIncludes(boolean analyzeIncludes) {
-		this.analyzeIncludes = analyzeIncludes;
-	}
-
-	public void setIncludesPath(File[] includesPath) {
-		this.includesPath = includesPath;
 	}
 }
