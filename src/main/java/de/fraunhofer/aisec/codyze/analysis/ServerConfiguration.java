@@ -1,6 +1,7 @@
 
 package de.fraunhofer.aisec.codyze.analysis;
 
+import de.fraunhofer.aisec.cpg.TranslationConfiguration;
 import de.fraunhofer.aisec.cpg.frontends.LanguageFrontend;
 import kotlin.Pair;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -46,6 +47,8 @@ public class ServerConfiguration {
 	/** Additional registered languages */
 	public final List<Pair<Class<? extends LanguageFrontend>, List<String>>> additionalLanguages;
 
+	public final TranslationConfiguration tc;
+
 	private ServerConfiguration(
 			boolean launchConsole,
 			boolean launchLsp,
@@ -54,7 +57,8 @@ public class ServerConfiguration {
 			boolean analyzeIncludes,
 			@NonNull File[] includePath,
 			boolean disableGoodFindings,
-			List<Pair<Class<? extends LanguageFrontend>, List<String>>> additionalLanguages) {
+			List<Pair<Class<? extends LanguageFrontend>, List<String>>> additionalLanguages,
+			TranslationConfiguration tc) {
 		this.launchConsole = launchConsole;
 		this.launchLsp = launchLsp;
 		this.markModelFiles = markModelFiles;
@@ -63,6 +67,7 @@ public class ServerConfiguration {
 		this.includePath = includePath;
 		this.disableGoodFindings = disableGoodFindings;
 		this.additionalLanguages = additionalLanguages;
+		this.tc = tc;
 	}
 
 	public static Builder builder() {
@@ -80,6 +85,7 @@ public class ServerConfiguration {
 		private File[] includePath = new File[0];
 		private boolean disableGoodFindings;
 		public final List<Pair<Class<? extends LanguageFrontend>, List<String>>> additionalLanguages = new ArrayList<>();
+		private TranslationConfiguration tc;
 
 		public Builder launchConsole(boolean launchConsole) {
 			this.launchConsole = launchConsole;
@@ -130,6 +136,11 @@ public class ServerConfiguration {
 			return this;
 		}
 
+		public Builder addTranslationConfig(TranslationConfiguration tc) {
+			this.tc = tc;
+			return this;
+		}
+
 		public ServerConfiguration build() {
 			return new ServerConfiguration(
 				launchConsole,
@@ -139,7 +150,8 @@ public class ServerConfiguration {
 				analyzeIncludes,
 				includePath,
 				disableGoodFindings,
-				additionalLanguages);
+				additionalLanguages,
+				tc);
 		}
 	}
 }
