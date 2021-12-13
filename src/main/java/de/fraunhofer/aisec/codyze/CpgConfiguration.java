@@ -3,6 +3,7 @@ package de.fraunhofer.aisec.codyze;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import de.fraunhofer.aisec.cpg.TranslationConfiguration;
 import de.fraunhofer.aisec.cpg.passes.Pass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,20 +17,23 @@ import java.util.concurrent.Callable;
 public class CpgConfiguration implements Callable<Integer> {
 
 	private boolean debugParser;
-	private boolean analyzeIncludes;
-	private File[] includePaths;
-	private List<String> includeWhitelist;
-	private List<String> includeBlacklist;
+	// TODO: put into translation settings?
+	private List<String> includeWhitelist = new ArrayList<>();
+	private List<String> includeBlacklist = new ArrayList<>();
+
 	private boolean disableCleanup;
 	private boolean codeInNodes;
 	private boolean processAnnotations;
 	private boolean failOnError;
-	private Map<String, String> symbols;
+	private Map<String, String> symbols = new HashMap<>();
+	// TODO: names!
 	private boolean useUnityBuild;
 	private boolean useParallelFrontends;
 	private boolean typeSystemActiveInFrontend;
-	private boolean defaultPasses;
-	private List<Pass> passes;
+	private boolean defaultPasses = true;
+
+	// TODO: how turn string into pass?
+	private List<? extends Pass> passes = new ArrayList<>();
 
 	@JsonDeserialize(using = LanguageDeseralizer.class)
 	private EnumSet<Language> additionalLanguages = EnumSet.noneOf(Language.class);
@@ -48,80 +52,83 @@ public class CpgConfiguration implements Callable<Integer> {
 	@CommandLine.ArgGroup(exclusive = false, heading = "Translation settings\n")
 	private TranslationSettings translationSettings = new TranslationSettings();
 
-	public boolean isAnalyzeIncludes() {
-		return analyzeIncludes;
-	}
+	private static final Logger log = LoggerFactory.getLogger(CpgConfiguration.class);
 
-	public void setAnalyzeIncludes(boolean analyzeIncludes) {
-		this.analyzeIncludes = analyzeIncludes;
-	}
+	public TranslationConfiguration buildTranslationSettings(String url) {
+		List<File> files = new ArrayList<>();
+		File f = new File(url);
+		if (f.isDirectory()) {
+			File[] list = f.listFiles();
+			if (list != null) {
+				files.addAll(Arrays.asList(list));
+			} else {
+				log.error("Null file list");
+			}
+		} else {
+			files.add(f);
+		}
 
-	public File[] getIncludePaths() {
-		return includePaths;
-	}
+		TranslationConfiguration.Builder translationConfig = new TranslationConfiguration.Builder()
+				.debugParser(debugParser)
+				.loadIncludes(translationSettings.analyzeIncludes)
+				.codeInNodes(codeInNodes)
+				.processAnnotations(processAnnotations)
+				.failOnError(failOnError)
+				.symbols(symbols)
+				.useUnityBuild(useUnityBuild)
+				.useParallelFrontends(useParallelFrontends)
+				.typeSystemActiveInFrontend(typeSystemActiveInFrontend)
+				.sourceLocations(files.toArray(new File[0]));
 
-	public void setIncludePaths(File[] includePaths) {
-		this.includePaths = includePaths;
-	}
+		for (String w : includeWhitelist)
+			translationConfig.includeWhitelist(w);
+		for (String b : includeBlacklist)
+			translationConfig.includeBlacklist(b);
 
-	public TranslationSettings getTranslationSettings() {
-		return translationSettings;
+		if (disableCleanup)
+			translationConfig.disableCleanup();
+
+		if (defaultPasses)
+			translationConfig.defaultPasses();
+		for (Pass p : passes)
+			translationConfig.registerPass(p);
+
+		for (Language l : additionalLanguages)
+			translationConfig.registerLanguage(l.languageFrontend, l.fileTypes);
+
+		if (translationSettings.includesPath != null)
+			for (File file : translationSettings.includesPath)
+				translationConfig.includePath(file.getAbsolutePath());
+
+		return translationConfig.build();
 	}
 
 	public void setTranslationSettings(TranslationSettings translationSettings) {
 		this.translationSettings = translationSettings;
 	}
 
-	public EnumSet<Language> getAdditionalLanguages() {
-		return additionalLanguages;
-	}
-
 	public void setAdditionalLanguages(EnumSet<Language> additionalLanguages) {
 		this.additionalLanguages = additionalLanguages;
-	}
-
-	public boolean isDebugParser() {
-		return debugParser;
 	}
 
 	public void setDebugParser(boolean debugParser) {
 		this.debugParser = debugParser;
 	}
 
-	public List<String> getIncludeWhitelist() {
-		return includeWhitelist;
-	}
-
 	public void setIncludeWhitelist(List<String> includeWhitelist) {
 		this.includeWhitelist = includeWhitelist;
-	}
-
-	public List<String> getIncludeBlacklist() {
-		return includeBlacklist;
 	}
 
 	public void setIncludeBlacklist(List<String> includeBlacklist) {
 		this.includeBlacklist = includeBlacklist;
 	}
 
-	public boolean isDefaultPasses() {
-		return defaultPasses;
-	}
-
 	public void setDefaultPasses(boolean defaultPasses) {
 		this.defaultPasses = defaultPasses;
 	}
 
-	public List<Pass> getPasses() {
-		return passes;
-	}
-
 	public void setPasses(List<Pass> passes) {
 		this.passes = passes;
-	}
-
-	public Map<String, String> getSymbols() {
-		return symbols;
 	}
 
 	public void setSymbols(Map<String, String> symbols) {
@@ -159,5 +166,23 @@ public class CpgConfiguration implements Callable<Integer> {
 	@Override
 	public Integer call() throws Exception {
 		return 0;
+	}
+
+}
+
+class TranslationSettings {
+	@Option(names = {
+			"--analyze-includes" }, description = "Enables parsing of include files. By default, if --includes are given, the parser will resolve symbols/templates from these include, but not load their parse tree.")
+	protected boolean analyzeIncludes = false;
+
+	@Option(names = { "--includes" }, description = "Path(s) containing include files. Path must be separated by : (Mac/Linux) or ; (Windows)", split = ":|;")
+	protected File[] includesPath;
+
+	public void setAnalyzeIncludes(boolean analyzeIncludes) {
+		this.analyzeIncludes = analyzeIncludes;
+	}
+
+	public void setIncludes(File[] includesPath) {
+		this.includesPath = includesPath;
 	}
 }
