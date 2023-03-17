@@ -119,7 +119,7 @@ dependencies {
     api("org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0") // ok
 
     // Interactive console interface support using Jython (Scripting engine)
-    implementation("org.python:jython-standalone:2.7.2") // ok
+    implementation("org.python:jython-standalone:2.7.3") // ok
 
     // Command line interface support
     api("info.picocli:picocli:4.6.2")
